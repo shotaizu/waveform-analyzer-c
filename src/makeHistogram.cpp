@@ -11,12 +11,13 @@
 void showHelp(const char *arg0){
     std::cout << arg0 << " {options}\n\n"
         << "Usage:\n"
-        << "OPTIONS: -h, --help, -o, --xmin, --xmax, --nbins\n"
+        << "OPTIONS: -h, --help, -o, --xmin, --xmax, --nbins, --quiet\n"
         << "\t-h, --help: show this help\n"
         << "\t-o {filename}: write TH1 histogram into this file (in default, the histogram is saved in \"out.root\")\n"
         << "\t--xmin {min}: left edge of TH1F\n"
         << "\t--xmax {max}: right edge of TH1F\n"
         << "\t--nbins {nbin}: number of bins of TH1F\n"
+        << "\t--quiet: does not show text-historgram\n"
         << "\n"
         << "Copyright 2020 Shota Izumiyama" << std::endl;
     return;
@@ -66,6 +67,7 @@ int main (int argc, char **argv){
     std::pair<double, double> hist_ragnge { 0., 10e-9};
     int hist_nbins = 200;
     std::string ofname = "out.root";
+    int texthist_on = 1;
 
     while (1) {
         int this_option_optind = optind ? optind : 1;
@@ -75,6 +77,7 @@ int main (int argc, char **argv){
             {"xmax",     required_argument, 0,  0 },
             {"nbins",     required_argument, 0,  0 },
             {"help", no_argument, 0, 0},
+            {"quiet", no_argument, 0, 0},
             {0,         0,                 0,  0 }
         };
 
@@ -98,6 +101,9 @@ int main (int argc, char **argv){
                     case 3:
                         showHelp(argv[0]);
                         return EXIT_SUCCESS;
+                        break;
+                    case 4:
+                        texthist_on = 0;
                         break;
                     default:
                         break;
@@ -136,7 +142,8 @@ int main (int argc, char **argv){
         h->Fill(x);
         histdata.push_back(x);
     }
-    drawHistgramCLI(histdata);
+    if(texthist_on > 0)
+        drawHistgramCLI(histdata);
     TFile *f = new TFile(ofname.c_str(), "RECREATE");
     h->Write();
     f->Save();
