@@ -9,7 +9,17 @@
 #include <cctype>
 
 void showHelp(const char *arg0){
-    std::cout << arg0 << "{[raw-csv_file]} {options}" << std::endl;
+    std::cout << arg0 << " {[raw-csv_file]} {options}\n\n"
+        << "Usage:\n"
+        << "[raw-csv_file]: waveform-file of oscilloscope (should be csv format of Tektronix for now)\n\n"
+        << "OPTIONS: -h, --help, --threshold, --mestype, --trigger, --period, --autothreshold\n"
+        << "\t-h, --help: show this help\n"
+        << "\t--mestype {trigger, period}: select measurement type: trigger=relative timing, period=calculate period\n"
+        << "\t--trigger: equivalent to \"--mestype trigger\"\n"
+        << "\t--period: equiavalent to \"--mestype period\" (default)\n"
+        << "\t--autothreshold: set threshold to 50\% of amplitude\n"
+        << "\n"
+        << "Copyright 2020 Shota Izumiyama" << std::endl;
     return;
 }
 
@@ -32,7 +42,7 @@ int main(int argc, char **argv){
         int option_index = 0;
         static struct option long_options[] = {
             {"threshold",     required_argument, 0,  0 },
-            {"type",     required_argument, 0,  0 },
+            {"mestype",     required_argument, 0,  0 },
             {"trigger",     no_argument, 0,  0 },
             {"period",     no_argument, 0,  0 },
             {"help",     no_argument, 0,  0 },

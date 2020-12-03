@@ -1,9 +1,62 @@
 #include <iostream>
 #include <string>
+#include <algorithm>
+#include <vector>
 #include <stdlib.h>
 #include <TFile.h>
 #include <TH1.h>
 #include <getopt.h>
+
+
+void showHelp(const char *arg0){
+    std::cout << arg0 << " {options}\n\n"
+        << "Usage:\n"
+        << "OPTIONS: -h, --help, -o, --xmin, --xmax, --nbins\n"
+        << "\t-h, --help: show this help\n"
+        << "\t-o {filename}: write TH1 histogram into this file (in default, the histogram is saved in \"out.root\")\n"
+        << "\t--xmin {min}: left edge of TH1F\n"
+        << "\t--xmax {max}: right edge of TH1F\n"
+        << "\t--nbins {nbin}: number of bins of TH1F\n"
+        << "\n"
+        << "Copyright 2020 Shota Izumiyama" << std::endl;
+    return;
+}
+
+void drawHistgramCLI(const std::vector<double> buf){
+    auto minmax = std::minmax_element(buf.begin(), buf.end());
+    const double ledge = *minmax.first - (*minmax.second - *minmax.first) * 0.1;
+    const double redge = *minmax.second + (*minmax.second - *minmax.first) * 0.1;
+    std::vector<double>hist(10,0.);
+    if(redge > ledge){
+        for(auto d = buf.begin(); d != buf.end(); d++){
+            int b = 10 * (*d - ledge)/( redge - ledge);
+            if(b >= 0 && b < 10)
+                hist[b]+=1.;
+        }
+    }
+
+    auto yminmax = std::minmax_element(hist.begin(), hist.end());
+    const double ylow = *yminmax.first;
+    const double yhigh = *yminmax.second;
+    if( ylow < yhigh){
+        for(auto b = hist.begin(); b != hist.end(); b++)
+            *b = 10. * (double)(*b - ylow) /(double)( yhigh - ylow);
+    }
+    
+    for(int i = 0; i < 10; i++){
+        std::cout << " |";
+        for(auto b = hist.begin(); b != hist.end(); b++)
+            std::cout << (*b >=(10-i)?"*":" ");
+        std::cout << std::endl;
+    }
+    std::cout << " +---------->" << std::endl;
+    std::cout << "Axis:" << std::endl;
+    std::cout << "[xmin:xmax] = [" << ledge << ":" << redge << "]" << std::endl;
+    std::cout << "[ymin:ymax] = [" << ylow << ":" << yhigh << "]" << std::endl;
+
+    return;
+}
+
 
 
 int main (int argc, char **argv){
@@ -21,10 +74,11 @@ int main (int argc, char **argv){
             {"xmin",     required_argument, 0,  0 },
             {"xmax",     required_argument, 0,  0 },
             {"nbins",     required_argument, 0,  0 },
+            {"help", no_argument, 0, 0},
             {0,         0,                 0,  0 }
         };
 
-        c = getopt_long(argc, argv, "o:",
+        c = getopt_long(argc, argv, "o:h",
                 long_options, &option_index);
         if (c == -1)
             break;
@@ -41,12 +95,20 @@ int main (int argc, char **argv){
                     case 2:
                         hist_nbins = std::stoi(optarg);
                         break;
+                    case 3:
+                        showHelp(argv[0]);
+                        return EXIT_SUCCESS;
+                        break;
                     default:
                         break;
                 }
                 break;
             case 'o':
                 ofname = std::string(optarg);
+                break;
+            case 'h':
+                showHelp(argv[0]);
+                return EXIT_SUCCESS;
                 break;
             case '?':
                 break;
@@ -58,8 +120,11 @@ int main (int argc, char **argv){
     //while (optind < argc)
     //    printf("%s ", argv[optind++]);
 
+
     TH1F *h = new TH1F("hist", ";;Entries / bin;", hist_nbins, hist_ragnge.first, hist_ragnge.second);
     h->Sumw2();
+
+    std::vector<double> histdata;
 
     for(std::string line; std::getline(std::cin, line);){
         double x;
@@ -69,7 +134,9 @@ int main (int argc, char **argv){
             continue;
         }
         h->Fill(x);
+        histdata.push_back(x);
     }
+    drawHistgramCLI(histdata);
     TFile *f = new TFile(ofname.c_str(), "RECREATE");
     h->Write();
     f->Save();
