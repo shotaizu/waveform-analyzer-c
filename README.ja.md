@@ -73,8 +73,10 @@ OPTIONS: -h, --help, -o, --xmin, --xmax, --nbins
 ディレクトリ data/ に複数の波形データ(xxx.csv) がある場合:
 
 ```
-analyze.sh
---------------------
+#!/bin/bash
+# analyze.sh
+#--------------------
+
 for f in data/*.csv
 do
     readRawFile --threshold 1.24 --mestype period $f
