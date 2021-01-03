@@ -177,8 +177,10 @@ int main(int argc, char **argv){
     switch (mes_type){
         case kMesTypePeriod:
             if(trigtimes.size() < 2) return EXIT_SUCCESS;
-            for(auto t = trigtimes.begin()+1; t != trigtimes.end(); t++)
+            for(auto t = trigtimes.begin()+1; t != trigtimes.end(); t++){
+                if( *t < *(t-1) ) continue;
                 std::cout << std::left << std::setw(15) << *t - *(t-1) << std::endl;
+            }
             break;
         case kMesTypeTrigger:
             for(auto t = trigtimes.begin(); t != trigtimes.end(); t++){
