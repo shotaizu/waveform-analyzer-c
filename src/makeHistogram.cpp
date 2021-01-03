@@ -1,10 +1,12 @@
 #include <iostream>
 #include <string>
 #include <algorithm>
+#include <numeric>
 #include <vector>
 #include <stdlib.h>
 #include <TFile.h>
 #include <TH1.h>
+#include <TMath.h>
 #include <getopt.h>
 
 
@@ -23,7 +25,7 @@ void showHelp(const char *arg0){
     return;
 }
 
-void drawHistgramCLI(const std::vector<double> buf){
+void drawHistgramCLI(const std::vector<double> &buf){
     auto minmax = std::minmax_element(buf.begin(), buf.end());
     const double ledge = *minmax.first - (*minmax.second - *minmax.first) * 0.1;
     const double redge = *minmax.second + (*minmax.second - *minmax.first) * 0.1;
@@ -144,6 +146,15 @@ int main (int argc, char **argv){
     }
     if(texthist_on > 0)
         drawHistgramCLI(histdata);
+
+    if(histdata.size()>0){
+        double mean = std::accumulate(histdata.begin(), histdata.end(), 0.) / (double)histdata.size();
+        std::cout << "Mean: " <<  mean << std::endl;
+        auto calc_square = [](double sum, double a){ return sum + TMath::Power(a, 2);};
+        std::cout << "StdDev: " <<  TMath::Sqrt(std::accumulate(histdata.begin(), histdata.end(), 0., calc_square) / (double)histdata.size() - TMath::Power(mean,2))  << std::endl;
+        //std::cout << "StdDev(ROOT): " <<  TMath::StdDev(histdata.begin(), histdata.end())  << std::endl;
+    }
+
     TFile *f = new TFile(ofname.c_str(), "RECREATE");
     h->Write();
     f->Save();
